@@ -27,22 +27,24 @@
     .tab:hover:not(.active) { color: #ccc; }
 
     /* ── Projects screen ── */
-    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .project-card { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
-    .project-card:hover { border-color: #555; transform: translateY(-1px); }
-    .project-card-logo { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #111; }
-    .project-card-logo-placeholder { width: 100%; aspect-ratio: 16/9; background: #111; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #333; }
-    .project-card-body { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .project-card-title { display: flex; align-items: center; gap: 6px; }
-    .project-card-title h2 { font-size: 1rem; font-weight: 600; color: #fff; }
-    .rename-btn { background: none; border: none; color: #555; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; line-height: 1; transition: color 0.15s; flex-shrink: 0; border-radius: 3px; }
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; margin-bottom: 32px; }
+    .project-card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s; }
+    .project-card:hover { border-color: #555; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .project-card-logo { width: 100%; aspect-ratio: 16/6; object-fit: cover; display: block; background: #111; }
+    .project-card-logo-placeholder { width: 100%; aspect-ratio: 16/6; background: #111; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #2a2a2a; }
+    .project-card-body { padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .project-card-title { display: flex; align-items: center; gap: 8px; }
+    .project-card-title h2 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+    .rename-btn { background: none; border: none; color: #555; cursor: pointer; padding: 2px 4px; font-size: 0.85rem; line-height: 1; transition: color 0.15s; flex-shrink: 0; border-radius: 3px; }
     .rename-btn:hover { color: #4a9eff; background: #222; }
-    .project-card .meta { font-size: 0.78rem; color: #666; display: flex; gap: 10px; }
-    .project-card .meta span { color: #888; }
-    .project-card .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .project-card .meta { font-size: 0.82rem; color: #666; display: flex; gap: 16px; flex-wrap: wrap; }
+    .project-card .meta-stat { display: flex; flex-direction: column; gap: 2px; }
+    .project-card .meta-stat .meta-val { font-size: 1.3rem; font-weight: 600; color: #fff; line-height: 1; }
+    .project-card .meta-stat .meta-label { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
+    .project-card .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #222; margin-top: 2px; }
     .remove-link { background: none; border: none; color: #555; font-size: 0.75rem; cursor: pointer; padding: 0; }
     .remove-link:hover { color: #f88; }
-    .rename-input { background: #111; border: 1px solid #4a9eff; border-radius: 4px; color: #fff; font-size: 1rem; font-weight: 600; padding: 2px 6px; width: 100%; outline: none; }
+    .rename-input { background: #111; border: 1px solid #4a9eff; border-radius: 4px; color: #fff; font-size: 1.2rem; font-weight: 700; padding: 2px 6px; width: 100%; outline: none; }
     .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s; }
     .btn-primary { background: #4a9eff; color: #fff; }
     .btn-primary:hover { background: #3a8eef; }
@@ -62,6 +64,10 @@
     .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #4a9eff; }
     .form-group textarea { resize: vertical; min-height: 70px; }
 
+    .input-browse { display: flex; gap: 6px; align-items: center; }
+    .input-browse input { flex: 1; min-width: 0; }
+    .btn-browse { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #aaa; padding: 7px 10px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
+    .btn-browse:hover { background: #333; color: #ccc; }
     .error-msg { color: #f88; font-size: 0.82rem; margin-top: 6px; }
     .success-msg { color: #6f6; font-size: 0.82rem; margin-top: 6px; }
     .empty-state { color: #555; text-align: center; padding: 40px; font-size: 0.9rem; }
@@ -79,7 +85,11 @@
     .filter-bar select { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; padding: 7px 10px; font-size: 0.85rem; }
 
     /* ── Clip grid ── */
-    .clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 220px), 1fr)); gap: 12px; }
+    .size-controls { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+    .size-btn { background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 5px; color: #888; width: 28px; height: 28px; cursor: pointer; font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
+    .size-btn:hover:not(:disabled) { background: #333; color: #ccc; }
+    .size-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .clip-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
     .clip-card:hover { border-color: #444; }
     .clip-thumb { width: 100%; display: block; background: #111; }
@@ -88,6 +98,8 @@
     .clip-title { font-size: 0.82rem; font-weight: 500; color: #ccc; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .clip-source { font-size: 0.72rem; color: #666; margin-bottom: 5px; }
     .clip-source .source-file { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #888; }
+    .clip-source .source-file-link { cursor: pointer; }
+    .clip-source .source-file-link:hover { color: #4a9eff; text-decoration: underline; }
     .clip-source .timecode { display: block; color: #4a9eff; font-family: monospace; font-size: 0.7rem; }
     .clip-tags { display: flex; flex-wrap: wrap; gap: 4px; }
     .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; }
@@ -195,9 +207,13 @@ const api = {
     body: JSON.stringify(filename ? { filename } : {}),
   }).then(r => r.json()),
   fetchAnalysisStatus: (slug) => fetch(`/api/projects/${slug}/analyze/status`).then(r => r.json()),
-  revealInFinder: (slug, filePath) => fetch(`/api/projects/${slug}/reveal`, {
+  revealInFinder: (filePath) => fetch('/api/reveal', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ filePath }),
+  }).then(r => r.json()),
+  pick: (type) => fetch('/api/pick', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type }),
   }).then(r => r.json()),
 };
 
@@ -336,7 +352,11 @@ function ClipCard({ clip, onEdit }) {
         {(clip.sourceFilename || clip.startTime) && (
           <div className="clip-source">
             {clip.sourceFilename && (
-              <span className="source-file" title={clip.sourceFilename}>
+              <span
+                className="source-file source-file-link"
+                title={`Reveal in Finder: ${clip.sourceFilename}`}
+                onClick={e => { e.stopPropagation(); api.revealInFinder(clip.sourceFilePath || clip.sourceFilename); }}
+              >
                 {clip.sourceFilename.replace(/\.[^.]+$/, '')}
               </span>
             )}
@@ -417,7 +437,13 @@ function EditModal({ clip, slug, taxonomy, onClose, onSave, onDelete }) {
             <label>Source file &amp; timecode</label>
             <div style={{ background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '8px 10px', lineHeight: '1.6' }}>
               {clip.sourceFilename && (
-                <div style={{ fontSize: '0.85rem', color: '#ccc', fontFamily: 'monospace', wordBreak: 'break-all' }}>{clip.sourceFilename}</div>
+                <div
+                  style={{ fontSize: '0.85rem', color: '#ccc', fontFamily: 'monospace', wordBreak: 'break-all', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: '#444' }}
+                  title="Reveal in Finder"
+                  onClick={() => api.revealInFinder(clip.sourceFilePath || clip.sourceFilename)}
+                  onMouseEnter={e => e.currentTarget.style.color = '#4a9eff'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#ccc'}
+                >{clip.sourceFilename}</div>
               )}
               {clip.startTime && clip.endTime && (
                 <div style={{ fontSize: '0.9rem', color: '#4a9eff', fontFamily: 'monospace', fontWeight: 600 }}>{clip.startTime} – {clip.endTime}</div>
@@ -499,12 +525,15 @@ function EditModal({ clip, slug, taxonomy, onClose, onSave, onDelete }) {
 
 // ─── ClipsTab ─────────────────────────────────────────────────────────────────
 
+const CARD_SIZES = [160, 200, 240, 300, 380];
+
 function ClipsTab({ slug, index, taxonomy, onIndexChange }) {
   const [search, setSearch] = useState('');
   const [filterShot, setFilterShot] = useState('');
   const [filterTech, setFilterTech] = useState('');
   const [filterScore, setFilterScore] = useState('all');
   const [editClip, setEditClip] = useState(null);
+  const [sizeIdx, setSizeIdx] = useState(3);
 
   const clips = index?.clips || [];
 
@@ -555,6 +584,10 @@ function ClipsTab({ slug, index, taxonomy, onIndexChange }) {
           <option value="good">Good (50–80%)</option>
           <option value="marginal">Marginal (30–50%)</option>
         </select>
+        <div className="size-controls">
+          <button className="size-btn" title="Smaller" disabled={sizeIdx === 0} onClick={() => setSizeIdx(i => i - 1)}>−</button>
+          <button className="size-btn" title="Larger" disabled={sizeIdx === CARD_SIZES.length - 1} onClick={() => setSizeIdx(i => i + 1)}>+</button>
+        </div>
       </div>
 
       <div style={{ color: '#555', fontSize: '0.8rem', marginBottom: '12px' }}>
@@ -564,7 +597,7 @@ function ClipsTab({ slug, index, taxonomy, onIndexChange }) {
       {filtered.length === 0
         ? <div className="empty-state">No clips match your filters.</div>
         : (
-          <div className="clip-grid">
+          <div className="clip-grid" style={{ '--card-min': `${CARD_SIZES[sizeIdx]}px` }}>
             {filtered.map(clip => (
               <ClipCard key={clip.id} clip={clip} slug={slug} onEdit={setEditClip} />
             ))}
@@ -976,13 +1009,23 @@ function ProjectsScreen() {
                     </div>
                   )}
                   <div className="meta">
-                    <span>{p.clipCount} clips</span>
-                    <span>{p.videoCount} videos</span>
-                    {p.lastUpdated && <span>{new Date(p.lastUpdated).toLocaleDateString()}</span>}
+                    <div className="meta-stat">
+                      <span className="meta-val">{p.clipCount}</span>
+                      <span className="meta-label">Clips</span>
+                    </div>
+                    <div className="meta-stat">
+                      <span className="meta-val">{p.videoCount}</span>
+                      <span className="meta-label">Videos</span>
+                    </div>
+                    {p.lastUpdated && (
+                      <div style={{ alignSelf: 'flex-end', fontSize: '0.72rem', color: '#444', marginLeft: 'auto' }}>
+                        Updated {new Date(p.lastUpdated).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                   <div className="card-footer">
-                    <div style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.folderPath.split('/').pop()}
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                      {p.folderPath}
                     </div>
                     <button className="remove-link" onClick={e => { e.stopPropagation(); unregister(p.slug, p.name); }}>
                       Remove
@@ -998,14 +1041,20 @@ function ProjectsScreen() {
           <h3>Register a Project</h3>
           <div className="form-row">
             <div className="form-group" style={{ flex: 2 }}>
-              <label>Video folder path</label>
-              <input
-                type="text"
-                value={folderPath}
-                onChange={e => setFolderPath(e.target.value)}
-                placeholder="/path/to/your/videos"
-                onKeyDown={e => e.key === 'Enter' && register()}
-              />
+              <label>Video folder</label>
+              <div className="input-browse">
+                <input
+                  type="text"
+                  value={folderPath}
+                  onChange={e => setFolderPath(e.target.value)}
+                  placeholder="/path/to/your/videos"
+                  onKeyDown={e => e.key === 'Enter' && register()}
+                />
+                <button className="btn-browse" onClick={async () => {
+                  const r = await api.pick('folder');
+                  if (!r.cancelled && r.path) setFolderPath(r.path);
+                }}>Browse…</button>
+              </div>
             </div>
             <div className="form-group">
               <label>Project name (optional)</label>
@@ -1018,14 +1067,20 @@ function ProjectsScreen() {
               />
             </div>
             <div className="form-group">
-              <label>Logo URL or /assets/… path (optional)</label>
-              <input
-                type="text"
-                value={logoPath}
-                onChange={e => setLogoPath(e.target.value)}
-                placeholder="/assets/banner.jpeg"
-                onKeyDown={e => e.key === 'Enter' && register()}
-              />
+              <label>Logo image (optional)</label>
+              <div className="input-browse">
+                <input
+                  type="text"
+                  value={logoPath}
+                  onChange={e => setLogoPath(e.target.value)}
+                  placeholder="Pick an image or paste a path"
+                  onKeyDown={e => e.key === 'Enter' && register()}
+                />
+                <button className="btn-browse" onClick={async () => {
+                  const r = await api.pick('file');
+                  if (!r.cancelled && r.path) setLogoPath(r.path);
+                }}>Browse…</button>
+              </div>
             </div>
             <div className="form-group" style={{ flex: 0, justifyContent: 'flex-end' }}>
               <label>&nbsp;</label>

@@ -53,7 +53,13 @@ const analysisJobs = new Map(); // slug → job object
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith(".html")) {
+      res.setHeader("Cache-Control", "no-store");
+    }
+  },
+}));
 
 // ─── Project registry routes ─────────────────────────────────────────────────
 
@@ -176,6 +182,7 @@ app.get("/api/projects/:slug/index", (req, res) => {
         ? `/api/projects/${slug}/thumbnails/${clip.thumbnail}`
         : null,
       sourceFilename: videoInfo?.filename || null,
+      sourceFilePath: videoInfo ? path.join(videoInfo.sourcePath, videoInfo.filename) : null,
     };
   });
 
@@ -328,6 +335,41 @@ app.get("/api/projects/:slug/analyze/status", (req, res) => {
   const job = analysisJobs.get(req.params.slug);
   if (!job) return res.json({ status: "idle" });
   res.json(job);
+});
+
+// POST /api/pick — open a native macOS file/folder picker dialog
+app.post("/api/pick", (req, res) => {
+  const { type } = req.body; // "folder" or "file"
+  const script = type === "file"
+    ? `tell application "Finder"\nactivate\nset f to choose file with prompt "Choose a logo image"\nPOSIX path of f\nend tell`
+    : `tell application "Finder"\nactivate\nset f to choose folder with prompt "Choose a video folder"\nPOSIX path of f\nend tell`;
+
+  execFile("osascript", ["-e", script], (err, stdout) => {
+    if (err) {
+      // User cancelled — err.code 1, not a real error
+      return res.json({ cancelled: true });
+    }
+    res.json({ path: stdout.trim() });
+  });
+});
+
+// POST /api/reveal — open a new Finder window and select the file (macOS)
+app.post("/api/reveal", (req, res) => {
+  const { filePath } = req.body;
+  if (!filePath || !fs.existsSync(filePath)) {
+    return res.status(404).json({ error: "File not found" });
+  }
+  const script = `tell application "Finder"
+  activate
+  set f to POSIX file "${filePath.replace(/"/g, '\\"')}" as alias
+  make new Finder window
+  set target of front Finder window to (container of f)
+  select f
+end tell`;
+  execFile("osascript", ["-e", script], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
 });
 
 // POST /api/projects/:slug/reveal — reveal file in Finder (macOS)
