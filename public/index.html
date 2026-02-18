@@ -9,105 +9,136 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
 
     /* ── Layout ── */
     .app { display: flex; flex-direction: column; min-height: 100vh; }
-    .header { background: #1a1a1a; border-bottom: 1px solid #333; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
-    .header h1 { font-size: 1.1rem; font-weight: 600; color: #fff; }
-    .header .back-link { color: #888; text-decoration: none; font-size: 0.85rem; }
-    .header .back-link:hover { color: #ccc; }
-    .header .project-name { color: #aaa; font-size: 0.9rem; }
-    .main { flex: 1; padding: 20px; max-width: 1600px; margin: 0 auto; width: 100%; }
+
+    /* ── Project screen header (back nav) ── */
+    .header { background: #0a0a0a; border-bottom: 1px solid #1a1a1a; padding: 0 32px; display: flex; align-items: stretch; gap: 0; position: sticky; top: 0; z-index: 50; min-height: 82px; }
+    .header h1 { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 900; color: #fff; letter-spacing: -0.04em; line-height: 0.95; }
+    .header .back-link { color: #686868; text-decoration: none; font-size: 0.78rem; display: flex; align-items: center; gap: 5px; transition: color 0.15s; padding-right: 24px; margin-right: 24px; border-right: 1px solid #1e1e1e; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .header .back-link:hover { color: #aaa; }
+    .header-left { display: flex; align-items: center; gap: 0; flex: 1; }
+    .header-stats { display: flex; align-items: center; gap: 34px; padding-left: 32px; margin-left: auto; }
+    .header-stat { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .header-stat-val { font-size: clamp(1.6rem, 2.2vw, 2.1rem); font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.04em; }
+    .header-stat-label { font-size: 0.65rem; color: #b5b5b5; text-transform: uppercase; letter-spacing: 0.12em; }
+    .main { flex: 1; padding: 0 32px 40px; max-width: 1600px; margin: 0 auto; width: 100%; }
+
+    /* ── Home screen hero header ── */
+    .home-header { padding: 48px 32px 36px; max-width: 1600px; margin: 0 auto; width: 100%; }
+    .home-header-inner { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border: 1px solid #1a1a1a; border-radius: 14px; padding: 34px; min-height: 320px; }
+    .home-header-inner::before { content: ""; position: absolute; inset: 0; background: url('/assets/hero-image.jpeg') center 42% / cover no-repeat; opacity: 1; z-index: -2; }
+    .home-header-inner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,10,10,0.48) 0%, rgba(10,10,10,0.28) 38%, rgba(10,10,10,0.22) 68%, rgba(10,10,10,0.45) 100%), linear-gradient(180deg, rgba(10,10,10,0.10) 0%, rgba(10,10,10,0.35) 100%); z-index: -1; }
+    .home-wordmark { display: flex; flex-direction: column; gap: 6px; }
+    .home-wordmark h1 { font-size: clamp(3rem, 6vw, 5.4rem); font-weight: 900; color: #fff; letter-spacing: -0.045em; line-height: 0.92; text-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+    .home-wordmark p { font-size: clamp(1.05rem, 1.8vw, 1.5rem); color: #e0e0e0; letter-spacing: 0.005em; text-shadow: 0 8px 20px rgba(0,0,0,0.55); }
+    .home-stats-summary { display: flex; gap: 28px; }
+    .home-stat { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .home-stat-val { font-size: clamp(2rem, 3.4vw, 3.1rem); font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.035em; text-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+    .home-stat-label { font-size: 0.75rem; color: #dfdfdf; text-transform: uppercase; letter-spacing: 0.12em; }
 
     /* ── Tabs ── */
-    .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #333; }
-    .tab { padding: 8px 16px; background: none; border: none; border-bottom: 2px solid transparent; color: #888; cursor: pointer; font-size: 0.9rem; transition: color 0.15s; margin-bottom: -1px; }
-    .tab.active { color: #fff; border-bottom-color: #4a9eff; }
-    .tab:hover:not(.active) { color: #ccc; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #1a1a1a; margin-top: 24px; padding-bottom: 10px; }
+    .tab { padding: 10px 16px; background: #101010; border: 1px solid #242424; border-radius: 8px; color: #8f8f8f; cursor: pointer; font-size: 0.9rem; font-weight: 700; transition: color 0.15s, background 0.15s, border-color 0.15s; letter-spacing: 0.06em; text-transform: uppercase; }
+    .tab.active { color: #fff; background: #161616; border-color: #3a3a3a; }
+    .tab:hover:not(.active) { color: #d0d0d0; border-color: #313131; background: #141414; }
 
-    /* ── Projects screen ── */
-    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 20px; margin-bottom: 32px; }
-    .project-card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s; }
-    .project-card:hover { border-color: #555; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-    .project-card-logo { width: 100%; aspect-ratio: 16/6; object-fit: cover; display: block; background: #111; }
-    .project-card-logo-placeholder { width: 100%; aspect-ratio: 16/6; background: #111; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #2a2a2a; }
-    .project-card-body { padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    /* ── Projects grid ── */
+    .projects-section { padding: 0 32px 48px; max-width: 1600px; margin: 0 auto; width: 100%; }
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; margin-bottom: 40px; }
+
+    /* ── Project card ── */
+    .project-card { background: #111; border: 1px solid #1c1c1c; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; position: relative; }
+    .project-card:hover { border-color: #2e2e2e; transform: translateY(-3px); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .project-card-logo-wrap { position: relative; overflow: hidden; aspect-ratio: 1/1; background: #0c0c0c; border-bottom: 1px solid #1a1a1a; }
+    .project-card-logo { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform 0.3s ease; }
+    .project-card:hover .project-card-logo { transform: scale(1.02); }
+    .project-card-logo-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.02) 45%, rgba(0,0,0,0.22) 100%); }
+    .project-card-logo-placeholder { width: 100%; aspect-ratio: 1/1; background: #0e0e0e; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #2e2e2e; border-bottom: 1px solid #1a1a1a; }
+    .project-card-body { padding: 16px 20px 18px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
     .project-card-title { display: flex; align-items: center; gap: 8px; }
-    .project-card-title h2 { font-size: 1.2rem; font-weight: 700; color: #fff; }
-    .rename-btn { background: none; border: none; color: #555; cursor: pointer; padding: 2px 4px; font-size: 0.85rem; line-height: 1; transition: color 0.15s; flex-shrink: 0; border-radius: 3px; }
-    .rename-btn:hover { color: #4a9eff; background: #222; }
-    .project-card .meta { font-size: 0.82rem; color: #666; display: flex; gap: 16px; flex-wrap: wrap; }
-    .project-card .meta-stat { display: flex; flex-direction: column; gap: 2px; }
-    .project-card .meta-stat .meta-val { font-size: 1.3rem; font-weight: 600; color: #fff; line-height: 1; }
-    .project-card .meta-stat .meta-label { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
-    .project-card .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #222; margin-top: 2px; }
-    .remove-link { background: none; border: none; color: #555; font-size: 0.75rem; cursor: pointer; padding: 0; }
-    .remove-link:hover { color: #f88; }
-    .rename-input { background: #111; border: 1px solid #4a9eff; border-radius: 4px; color: #fff; font-size: 1.2rem; font-weight: 700; padding: 2px 6px; width: 100%; outline: none; }
-    .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s; }
-    .btn-primary { background: #4a9eff; color: #fff; }
-    .btn-primary:hover { background: #3a8eef; }
-    .btn-primary:disabled { background: #2a5a99; opacity: 0.6; cursor: not-allowed; }
-    .btn-secondary { background: #2a2a2a; color: #ccc; }
-    .btn-secondary:hover { background: #333; }
-    .btn-danger { background: #3a1010; color: #f88; }
-    .btn-danger:hover { background: #4a1818; }
-    .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+    .project-card-title h2 { font-size: 1.05rem; font-weight: 700; color: #f0f0f0; letter-spacing: -0.02em; flex: 1; }
+    .project-card-actions { display: flex; align-items: center; gap: 6px; }
+    .rename-btn { background: none; border: none; color: #555; cursor: pointer; padding: 3px 5px; font-size: 0.8rem; line-height: 1; transition: color 0.15s; flex-shrink: 0; border-radius: 4px; }
+    .rename-btn:hover { color: #fff; background: #222; }
+    .rename-btn svg { width: 13px; height: 13px; display: block; }
+    .project-card .meta { display: flex; gap: 20px; align-items: center; }
+    .project-card .meta-stat { display: flex; flex-direction: column; gap: 1px; }
+    .project-card .meta-stat .meta-val { font-size: 1.5rem; font-weight: 700; color: #fff; line-height: 1; letter-spacing: -0.03em; }
+    .project-card .meta-stat .meta-label { font-size: 0.62rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; }
+    .project-card .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #1a1a1a; }
+    .remove-link { background: none; border: none; color: #666; font-size: 0.72rem; cursor: pointer; padding: 0; transition: color 0.15s; }
+    .remove-link:hover { color: #f66; }
+    .rename-input { background: #0a0a0a; border: 1px solid #4a9eff; border-radius: 5px; color: #fff; font-size: 1.05rem; font-weight: 700; padding: 2px 8px; width: 100%; outline: none; }
 
-    .register-card { background: #1a1a1a; border: 1px solid #444; border-radius: 10px; padding: 20px; }
-    .register-card h3 { font-size: 0.95rem; font-weight: 600; color: #ccc; margin-bottom: 14px; }
-    .form-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px; }
-    .form-group label { font-size: 0.8rem; color: #888; }
-    .form-group input, .form-group textarea, .form-group select { background: #111; border: 1px solid #444; border-radius: 6px; color: #e0e0e0; padding: 8px 10px; font-size: 0.85rem; font-family: inherit; }
-    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #4a9eff; }
+    /* ── Buttons ── */
+    .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.84rem; font-weight: 500; transition: background 0.15s, opacity 0.15s; letter-spacing: 0.01em; }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-primary:hover { background: #e8e8e8; }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-secondary { background: #1e1e1e; color: #aaa; border: 1px solid #2a2a2a; }
+    .btn-secondary:hover { background: #252525; color: #ccc; }
+    .btn-danger { background: #1a0808; color: #f66; border: 1px solid #2a1010; }
+    .btn-danger:hover { background: #220a0a; }
+    .btn-sm { padding: 5px 11px; font-size: 0.78rem; }
+
+    /* ── Register card ── */
+    .register-section { border-top: 1px solid #141414; padding-top: 32px; }
+    .register-section-label { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; margin-bottom: 16px; }
+    .register-card { background: #0e0e0e; border: 1px solid #272727; border-radius: 14px; padding: 24px 26px; }
+    .form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
+    .form-group label { font-size: 0.72rem; color: #777; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .form-group input, .form-group textarea, .form-group select { background: #0a0a0a; border: 1px solid #303030; border-radius: 8px; color: #d0d0d0; padding: 9px 12px; font-size: 0.85rem; font-family: inherit; transition: border-color 0.15s; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #555; }
+    .form-group input::placeholder { color: #484848; }
     .form-group textarea { resize: vertical; min-height: 70px; }
 
     .input-browse { display: flex; gap: 6px; align-items: center; }
     .input-browse input { flex: 1; min-width: 0; }
-    .btn-browse { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #aaa; padding: 7px 10px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
-    .btn-browse:hover { background: #333; color: #ccc; }
-    .error-msg { color: #f88; font-size: 0.82rem; margin-top: 6px; }
-    .success-msg { color: #6f6; font-size: 0.82rem; margin-top: 6px; }
-    .empty-state { color: #555; text-align: center; padding: 40px; font-size: 0.9rem; }
-
-    /* ── Stats bar ── */
-    .stats-bar { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
-    .stat { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 16px; }
-    .stat .label { font-size: 0.72rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat .value { font-size: 1.2rem; font-weight: 600; color: #fff; }
+    .btn-browse { background: #1a1a1a; border: 1px solid #303030; border-radius: 8px; color: #777; padding: 9px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+    .btn-browse:hover { background: #222; color: #aaa; border-color: #444; }
+    .error-msg { color: #f66; font-size: 0.8rem; margin-top: 8px; }
+    .success-msg { color: #4f4; font-size: 0.8rem; margin-top: 8px; }
+    .empty-state { color: #4a4a4a; text-align: center; padding: 60px 40px; font-size: 0.88rem; letter-spacing: 0.02em; }
 
     /* ── Filters ── */
-    .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    .filter-bar input[type="text"] { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; padding: 7px 12px; font-size: 0.85rem; flex: 1; min-width: 200px; }
-    .filter-bar input[type="text"]:focus { outline: none; border-color: #4a9eff; }
-    .filter-bar select { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; padding: 7px 10px; font-size: 0.85rem; }
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .filter-bar input[type="text"] { background: #111; border: 1px solid #252525; border-radius: 8px; color: #ddd; padding: 8px 14px; font-size: 0.84rem; flex: 1; min-width: 200px; transition: border-color 0.15s; }
+    .filter-bar input[type="text"]::placeholder { color: #3a3a3a; }
+    .filter-bar input[type="text"]:focus { outline: none; border-color: #383838; }
+    .filter-bar select { background: #111; border: 1px solid #252525; border-radius: 8px; color: #aaa; padding: 8px 10px; font-size: 0.82rem; cursor: pointer; }
+    .filter-bar select:focus { outline: none; }
 
     /* ── Clip grid ── */
-    .clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 220px), 1fr)); gap: 12px; }
+    .clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 220px), 1fr)); gap: 10px; }
     .size-controls { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-    .size-btn { background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 5px; color: #888; width: 28px; height: 28px; cursor: pointer; font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
-    .size-btn:hover:not(:disabled) { background: #333; color: #ccc; }
-    .size-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .clip-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
-    .clip-card:hover { border-color: #444; }
-    .clip-thumb { width: 100%; display: block; background: #111; }
-    .clip-thumb-placeholder { width: 100%; aspect-ratio: 9/16; background: #111; display: flex; align-items: center; justify-content: center; color: #333; font-size: 0.75rem; }
-    .clip-info { padding: 10px; }
-    .clip-title { font-size: 0.82rem; font-weight: 500; color: #ccc; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .clip-source { font-size: 0.72rem; color: #666; margin-bottom: 5px; }
-    .clip-source .source-file { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #888; }
-    .clip-source .source-file-link { cursor: pointer; }
-    .clip-source .source-file-link:hover { color: #4a9eff; text-decoration: underline; }
-    .clip-source .timecode { display: block; color: #4a9eff; font-family: monospace; font-size: 0.7rem; }
-    .clip-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-    .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; }
-    .tag-shot { background: #1a2a4a; color: #7ab; }
-    .tag-tech { background: #1a3a1a; color: #7b7; }
-    .tag-equip { background: #2a1a3a; color: #a7b; }
-    .tag-score { background: #2a2a1a; color: #bb7; }
-    .tag-custom { background: #2a2a2a; color: #999; }
+    .size-btn { background: #181818; border: 1px solid #2a2a2a; border-radius: 5px; color: #666; width: 28px; height: 28px; cursor: pointer; font-size: 1.1rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
+    .size-btn:hover:not(:disabled) { background: #222; color: #bbb; }
+    .size-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    /* ── Clip card — overlay design ── */
+    .clip-card { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; background: #111; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+    .clip-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.7); }
+    .clip-thumb { width: 100%; display: block; }
+    .clip-thumb-placeholder { width: 100%; aspect-ratio: 9/16; background: #111; display: flex; align-items: center; justify-content: center; color: #2a2a2a; font-size: 0.75rem; }
+    .clip-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.8) 18%, transparent 38%); display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; pointer-events: none; }
+    .clip-overlay-inner { pointer-events: auto; }
+    .clip-title { font-size: 0.75rem; font-weight: 500; color: #e8e8e8; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
+    .clip-source { font-size: 0.68rem; color: #888; margin-bottom: 5px; }
+    .clip-source .source-file { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #777; }
+    .clip-source .source-file-link { cursor: pointer; pointer-events: auto; }
+    .clip-source .source-file-link:hover { color: #aaa; text-decoration: underline; }
+    .clip-source .timecode { display: inline-block; color: rgba(255,255,255,0.45); font-family: monospace; font-size: 0.65rem; margin-top: 2px; }
+    .clip-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.64rem; font-weight: 500; letter-spacing: 0.01em; }
+    .tag-shot { background: rgba(80,130,200,0.2); color: #7aaecc; }
+    .tag-tech { background: rgba(80,180,100,0.18); color: #7cc488; }
+    .tag-equip { background: rgba(160,100,200,0.18); color: #b891cc; }
+    .tag-score { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.1); font-weight: 600; }
+    .tag-custom { background: rgba(255,255,255,0.06); color: #888; }
 
     /* ── Edit modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -150,6 +181,25 @@
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #333; border-top-color: #4a9eff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .divider { border: none; border-top: 1px solid #222; margin: 20px 0; }
+    @media (max-width: 900px) {
+      .header { min-height: 68px; padding: 0 16px; }
+      .header h1 { font-size: clamp(1.35rem, 6vw, 1.8rem); }
+      .header .back-link { padding-right: 12px; margin-right: 12px; font-size: 0.66rem; }
+      .header-stats { gap: 14px; padding-left: 14px; }
+      .header-stat-val { font-size: 1.25rem; }
+      .header-stat-label { font-size: 0.56rem; }
+      .home-header { padding: 24px 16px 20px; }
+      .home-header-inner { min-height: 240px; padding: 22px 18px; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 14px; }
+      .home-header-inner::before { background-position: center; }
+      .home-stats-summary { gap: 18px; }
+      .home-stat { align-items: flex-start; }
+      .home-wordmark h1 { font-size: clamp(2.3rem, 10vw, 3.4rem); }
+      .home-wordmark p { font-size: 1rem; }
+      .home-stat-val { font-size: 1.8rem; }
+      .home-stat-label { font-size: 0.7rem; }
+      .tabs { gap: 6px; margin-top: 18px; margin-bottom: 18px; padding-bottom: 8px; }
+      .tab { padding: 8px 11px; font-size: 0.74rem; letter-spacing: 0.05em; }
+    }
   </style>
 </head>
 <body>
@@ -182,6 +232,10 @@ const api = {
   registerProject: (folderPath, name, logoUrl) => fetch('/api/projects', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ folderPath, name, logoUrl }),
+  }).then(r => r.json()),
+  patchProject: (slug, updates) => fetch(`/api/projects/${slug}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
   }).then(r => r.json()),
   renameProject: (slug, name) => fetch(`/api/projects/${slug}`, {
     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -347,33 +401,34 @@ function ClipCard({ clip, onEdit }) {
         ? <img ref={imgRef} className="clip-thumb" src={BLANK_GIF} alt="" />
         : <div className="clip-thumb-placeholder">no preview</div>
       }
-      <div className="clip-info">
-        <div className="clip-title" title={clip.description}>{clip.description || clip.id}</div>
-        {(clip.sourceFilename || clip.startTime) && (
-          <div className="clip-source">
-            {clip.sourceFilename && (
-              <span
-                className="source-file source-file-link"
-                title={`Reveal in Finder: ${clip.sourceFilename}`}
-                onClick={e => { e.stopPropagation(); api.revealInFinder(clip.sourceFilePath || clip.sourceFilename); }}
-              >
-                {clip.sourceFilename.replace(/\.[^.]+$/, '')}
+      <div className="clip-overlay">
+        <div className="clip-overlay-inner">
+          <div className="clip-title" title={clip.description}>{clip.description || clip.id}</div>
+          {(clip.sourceFilename || clip.startTime) && (
+            <div className="clip-source">
+              {clip.sourceFilename && (
+                <span
+                  className="source-file source-file-link"
+                  title={`Reveal in Finder: ${clip.sourceFilename}`}
+                  onClick={e => { e.stopPropagation(); api.revealInFinder(clip.sourceFilePath || clip.sourceFilename); }}
+                >
+                  {clip.sourceFilename.replace(/\.[^.]+$/, '')}
+                </span>
+              )}
+              {clip.startTime && clip.endTime && (
+                <span className="timecode"> · {clip.startTime}–{clip.endTime}</span>
+              )}
+            </div>
+          )}
+          <div className="clip-tags">
+            {clip.shotType && <Tag text={clip.shotType} type="shot" />}
+            {clip.technique && <Tag text={clip.technique} type="tech" />}
+            {clip.brollScore != null && (
+              <span className={`tag tag-score ${scoreClass(clip.brollScore)}`}>
+                {(clip.brollScore * 100).toFixed(0)}%
               </span>
             )}
-            {clip.startTime && clip.endTime && (
-              <span className="timecode">{clip.startTime} – {clip.endTime}</span>
-            )}
           </div>
-        )}
-        <div className="clip-tags">
-          {clip.shotType && <Tag text={clip.shotType} type="shot" />}
-          {clip.technique && <Tag text={clip.technique} type="tech" />}
-          {clip.equipment?.slice(0, 2).map(e => <Tag key={e} text={e} type="equip" />)}
-          {clip.brollScore != null && (
-            <span className={`tag tag-score ${scoreClass(clip.brollScore)}`}>
-              {(clip.brollScore * 100).toFixed(0)}%
-            </span>
-          )}
         </div>
       </div>
     </div>
@@ -864,27 +919,36 @@ function ProjectScreen({ slug }) {
   const clips = index?.clips || [];
   const videoCount = Object.keys(index?.videos || {}).length;
 
+  const excellentCount = clips.filter(c => c.brollScore >= 0.8).length;
+  const goodCount = clips.filter(c => c.brollScore >= 0.5 && c.brollScore < 0.8).length;
+
   return (
     <div className="app">
       <div className="header">
-        <a className="back-link" href="#/" onClick={e => { e.preventDefault(); navigate('#/'); }}>← All Projects</a>
-        <h1>{project?.name || slug}</h1>
-      </div>
-      <div className="main">
-
-        <div className="stats-bar">
-          <div className="stat"><div className="label">Clips</div><div className="value">{clips.length}</div></div>
-          <div className="stat"><div className="label">Videos</div><div className="value">{videoCount}</div></div>
-          <div className="stat">
-            <div className="label">Excellent</div>
-            <div className="value score-excellent">{clips.filter(c => c.brollScore >= 0.8).length}</div>
+        <div className="header-left">
+          <a className="back-link" href="#/" onClick={e => { e.preventDefault(); navigate('#/'); }}>← All Projects</a>
+          <h1>{project?.name || slug}</h1>
+        </div>
+        <div className="header-stats">
+          <div className="header-stat">
+            <span className="header-stat-val">{clips.length}</span>
+            <span className="header-stat-label">Clips</span>
           </div>
-          <div className="stat">
-            <div className="label">Good</div>
-            <div className="value score-good">{clips.filter(c => c.brollScore >= 0.5 && c.brollScore < 0.8).length}</div>
+          <div className="header-stat">
+            <span className="header-stat-val">{videoCount}</span>
+            <span className="header-stat-label">Videos</span>
+          </div>
+          <div className="header-stat">
+            <span className="header-stat-val score-excellent">{excellentCount}</span>
+            <span className="header-stat-label">Excellent</span>
+          </div>
+          <div className="header-stat">
+            <span className="header-stat-val score-good">{goodCount}</span>
+            <span className="header-stat-label">Good</span>
           </div>
         </div>
-
+      </div>
+      <div className="main">
         <div className="tabs">
           <button className={`tab ${tab === 'clips' ? 'active' : ''}`} onClick={() => setTab('clips')}>
             Clips ({clips.length})
@@ -968,23 +1032,63 @@ function ProjectsScreen() {
     loadProjects();
   }
 
-  return (
-    <div className="app">
-      <div className="header">
-        <h1>B-Roll Index</h1>
-      </div>
-      <div className="main">
+  async function pickProjectLogo(e, slug) {
+    e.stopPropagation();
+    const picked = await api.pick('file');
+    if (picked.cancelled || !picked.path) return;
+    await api.patchProject(slug, { logoUrl: picked.path });
+    loadProjects();
+  }
 
+  const totalClips = projects.reduce((n, p) => n + (p.clipCount || 0), 0);
+  const totalVideos = projects.reduce((n, p) => n + (p.videoCount || 0), 0);
+
+  return (
+    <div className="app" style={{ background: '#0a0a0a' }}>
+
+      {/* ── Hero header ── */}
+      <div className="home-header">
+        <div className="home-header-inner">
+          <div className="home-wordmark">
+            <h1>B-Roll Index</h1>
+            <p>AI-powered B-roll discovery for video creators</p>
+          </div>
+          {!loading && projects.length > 0 && (
+            <div className="home-stats-summary">
+              <div className="home-stat">
+                <span className="home-stat-val">{projects.length}</span>
+                <span className="home-stat-label">Projects</span>
+              </div>
+              <div className="home-stat">
+                <span className="home-stat-val">{totalVideos}</span>
+                <span className="home-stat-label">Videos</span>
+              </div>
+              <div className="home-stat">
+                <span className="home-stat-val">{totalClips}</span>
+                <span className="home-stat-label">Clips</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Projects + Register ── */}
+      <div className="projects-section">
         {loading ? (
           <div className="empty-state"><span className="spinner" /></div>
         ) : projects.length === 0 ? (
-          <div className="empty-state" style={{ marginBottom: '24px' }}>No projects yet. Register a video folder below.</div>
+          <div className="empty-state">No projects yet — register a video folder below to get started.</div>
         ) : (
           <div className="projects-grid">
             {projects.map(p => (
               <div className="project-card" key={p.slug} onClick={() => renamingSlug !== p.slug && navigate(`#/projects/${p.slug}`)}>
                 {p.logoUrl
-                  ? <img className="project-card-logo" src={p.logoUrl} alt={p.name} />
+                  ? (
+                    <div className="project-card-logo-wrap">
+                      <img className="project-card-logo" src={p.logoUrl} alt={p.name} />
+                      <div className="project-card-logo-overlay" />
+                    </div>
+                  )
                   : <div className="project-card-logo-placeholder">🎬</div>
                 }
                 <div className="project-card-body">
@@ -1005,7 +1109,16 @@ function ProjectsScreen() {
                   ) : (
                     <div className="project-card-title">
                       <h2>{p.name}</h2>
-                      <button className="rename-btn" title="Rename" onClick={e => startRename(e, p)}>✎</button>
+                      <div className="project-card-actions">
+                        <button className="rename-btn" title="Change logo" aria-label="Change logo" onClick={e => pickProjectLogo(e, p.slug)}>
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect x="1.8" y="2" width="12.4" height="11.2" rx="1.8" />
+                            <circle cx="5.3" cy="5.4" r="1.2" />
+                            <path d="M3.4 11l3.2-3.1 2.1 2.1 1.7-1.6 2.2 2.6" />
+                          </svg>
+                        </button>
+                        <button className="rename-btn" title="Rename" onClick={e => startRename(e, p)}>✎</button>
+                      </div>
                     </div>
                   )}
                   <div className="meta">
@@ -1018,13 +1131,13 @@ function ProjectsScreen() {
                       <span className="meta-label">Videos</span>
                     </div>
                     {p.lastUpdated && (
-                      <div style={{ alignSelf: 'flex-end', fontSize: '0.72rem', color: '#444', marginLeft: 'auto' }}>
-                        Updated {new Date(p.lastUpdated).toLocaleDateString()}
+                      <div style={{ marginLeft: 'auto', alignSelf: 'flex-end', fontSize: '0.68rem', color: '#555', letterSpacing: '0.02em' }}>
+                        {new Date(p.lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     )}
                   </div>
                   <div className="card-footer">
-                    <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.68rem', color: '#4a4a4a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
                       {p.folderPath}
                     </div>
                     <button className="remove-link" onClick={e => { e.stopPropagation(); unregister(p.slug, p.name); }}>
@@ -1037,59 +1150,62 @@ function ProjectsScreen() {
           </div>
         )}
 
-        <div className="register-card">
-          <h3>Register a Project</h3>
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 2 }}>
-              <label>Video folder</label>
-              <div className="input-browse">
+        {/* ── Register form ── */}
+        <div className="register-section">
+          <div className="register-section-label">Add a project</div>
+          <div className="register-card">
+            <div className="form-row">
+              <div className="form-group" style={{ flex: 2 }}>
+                <label>Video folder</label>
+                <div className="input-browse">
+                  <input
+                    type="text"
+                    value={folderPath}
+                    onChange={e => setFolderPath(e.target.value)}
+                    placeholder="/path/to/your/videos"
+                    onKeyDown={e => e.key === 'Enter' && register()}
+                  />
+                  <button className="btn-browse" onClick={async () => {
+                    const r = await api.pick('folder');
+                    if (!r.cancelled && r.path) setFolderPath(r.path);
+                  }}>Browse…</button>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Project name</label>
                 <input
                   type="text"
-                  value={folderPath}
-                  onChange={e => setFolderPath(e.target.value)}
-                  placeholder="/path/to/your/videos"
+                  value={projName}
+                  onChange={e => setProjName(e.target.value)}
+                  placeholder="Auto-derived from folder"
                   onKeyDown={e => e.key === 'Enter' && register()}
                 />
-                <button className="btn-browse" onClick={async () => {
-                  const r = await api.pick('folder');
-                  if (!r.cancelled && r.path) setFolderPath(r.path);
-                }}>Browse…</button>
+              </div>
+              <div className="form-group">
+                <label>Logo image</label>
+                <div className="input-browse">
+                  <input
+                    type="text"
+                    value={logoPath}
+                    onChange={e => setLogoPath(e.target.value)}
+                    placeholder="Optional"
+                    onKeyDown={e => e.key === 'Enter' && register()}
+                  />
+                  <button className="btn-browse" onClick={async () => {
+                    const r = await api.pick('file');
+                    if (!r.cancelled && r.path) setLogoPath(r.path);
+                  }}>Browse…</button>
+                </div>
+              </div>
+              <div className="form-group" style={{ flex: '0 0 auto' }}>
+                <label>&nbsp;</label>
+                <button className="btn btn-primary" onClick={register} disabled={registering}>
+                  {registering ? 'Adding…' : 'Add Project'}
+                </button>
               </div>
             </div>
-            <div className="form-group">
-              <label>Project name (optional)</label>
-              <input
-                type="text"
-                value={projName}
-                onChange={e => setProjName(e.target.value)}
-                placeholder="Auto-derived from folder name"
-                onKeyDown={e => e.key === 'Enter' && register()}
-              />
-            </div>
-            <div className="form-group">
-              <label>Logo image (optional)</label>
-              <div className="input-browse">
-                <input
-                  type="text"
-                  value={logoPath}
-                  onChange={e => setLogoPath(e.target.value)}
-                  placeholder="Pick an image or paste a path"
-                  onKeyDown={e => e.key === 'Enter' && register()}
-                />
-                <button className="btn-browse" onClick={async () => {
-                  const r = await api.pick('file');
-                  if (!r.cancelled && r.path) setLogoPath(r.path);
-                }}>Browse…</button>
-              </div>
-            </div>
-            <div className="form-group" style={{ flex: 0, justifyContent: 'flex-end' }}>
-              <label>&nbsp;</label>
-              <button className="btn btn-primary" onClick={register} disabled={registering}>
-                {registering ? 'Registering…' : 'Register'}
-              </button>
-            </div>
+            {registerError && <div className="error-msg">{registerError}</div>}
           </div>
-          {registerError && <div className="error-msg">{registerError}</div>}
         </div>
       </div>
     </div>
