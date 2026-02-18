@@ -248,6 +248,26 @@ async function main() {
       index.clips.push(...clips);
       totalClipsFound += clips.length;
 
+      // Merge newly discovered terms back into the project taxonomy
+      const allSegments = [...goodSegments];
+      function mergeTerms(existing, discovered) {
+        const set = new Set(existing.map(t => t.toLowerCase()));
+        for (const term of discovered) {
+          if (term && !set.has(term.toLowerCase())) {
+            existing.push(term);
+            set.add(term.toLowerCase());
+          }
+        }
+      }
+      for (const seg of allSegments) {
+        mergeTerms(taxonomy.equipment, toArray(seg.equipment));
+        mergeTerms(taxonomy.products, toArray(seg.products));
+        mergeTerms(taxonomy.techniques, toArray(seg.technique));
+        mergeTerms(taxonomy.subjectDescriptors, toArray(seg.subjectDescriptors));
+      }
+      saveTaxonomy(resolvedProject, taxonomy);
+      log(`  Taxonomy updated: ${taxonomy.equipment.length} equipment, ${taxonomy.products.length} products, ${taxonomy.techniques.length} techniques`);
+
       // Save after each video (resilient to interruption)
       saveIndex(resolvedProject, index);
       log(`  Saved to index. Running total: ${index.clips.length} clips`);

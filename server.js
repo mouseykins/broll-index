@@ -74,7 +74,12 @@ app.get("/api/projects", (req, res) => {
       videoCount = Object.keys(idx.videos).length;
       lastUpdated = idx.lastUpdated;
     } catch {}
-    return { ...p, clipCount, videoCount, lastUpdated };
+    // If logoUrl is an absolute filesystem path, proxy it through the server
+    const logoUrl = p.logoUrl && p.logoUrl.startsWith('/')
+      && !p.logoUrl.startsWith('/assets') && !p.logoUrl.startsWith('/api')
+      ? `/api/localfile?path=${encodeURIComponent(p.logoUrl)}`
+      : p.logoUrl;
+    return { ...p, logoUrl, clipCount, videoCount, lastUpdated };
   });
   res.json({ projects });
 });
@@ -101,8 +106,11 @@ app.post("/api/projects", (req, res) => {
   const slug = uniqueSlug(name || folderName, existingSlugs);
   const projectName = name || toTitleCase(folderName);
 
-  // Copy generic default taxonomy into project if none exists
-  if (!loadTaxonomy(resolved)) {
+  // Copy generic default taxonomy if none exists, or if the project has no clips yet
+  // (catches the case where a previously-deleted project left a stale taxonomy behind)
+  const existingIndex = loadIndex(resolved);
+  const hasClips = existingIndex.clips.length > 0;
+  if (!loadTaxonomy(resolved) || !hasClips) {
     const defaultTaxonomy = JSON.parse(fs.readFileSync(DEFAULT_TAXONOMY_PATH, "utf-8"));
     saveTaxonomy(resolved, defaultTaxonomy);
   }
@@ -145,6 +153,15 @@ app.delete("/api/projects/:slug", (req, res) => {
   }
   saveProjects(registry);
   res.json({ success: true });
+});
+
+// GET /api/localfile?path=… — proxy a local filesystem image to the browser
+app.get("/api/localfile", (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath || !fs.existsSync(filePath)) {
+    return res.status(404).send("Not found");
+  }
+  res.sendFile(filePath);
 });
 
 // ─── Per-project data routes ─────────────────────────────────────────────────
