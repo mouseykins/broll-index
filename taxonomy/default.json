@@ -1,0 +1,47 @@
+{
+  "shotTypes": [
+    "close-up",
+    "top-down",
+    "macro",
+    "product-shot",
+    "action-shot",
+    "beauty-shot",
+    "pour-shot",
+    "wide",
+    "talking-head"
+  ],
+  "techniques": [
+    "pour",
+    "mix",
+    "measure",
+    "prepare",
+    "serve",
+    "plate",
+    "cut",
+    "assemble",
+    "garnish",
+    "heat",
+    "cool"
+  ],
+  "equipment": [
+    "glass",
+    "mug",
+    "bottle",
+    "bowl",
+    "plate",
+    "pan",
+    "scale",
+    "container",
+    "tool"
+  ],
+  "products": [],
+  "subjectDescriptors": [],
+  "promptContext": "",
+  "brollScoreGuide": {
+    "excellent": { "min": 0.8, "max": 1.0, "description": "Excellent B-roll — close-up, top-down, or macro with clear subject, no presenter visible" },
+    "good": { "min": 0.5, "max": 0.8, "description": "Usable B-roll — subject is clear but framing isn't ideal, or minor presenter presence" },
+    "marginal": { "min": 0.3, "max": 0.5, "description": "Marginal — subject partially visible, wide framing, or motion blur" },
+    "notBroll": { "min": 0.0, "max": 0.3, "description": "Not B-roll — presenter-focused, title cards, text overlays" }
+  },
+  "minimumBrollScore": 0.5
+}

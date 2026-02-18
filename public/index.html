@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>B-Roll Index</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+
+    /* ── Layout ── */
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .header { background: #1a1a1a; border-bottom: 1px solid #333; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .header .back-link { color: #888; text-decoration: none; font-size: 0.85rem; }
+    .header .back-link:hover { color: #ccc; }
+    .header .project-name { color: #aaa; font-size: 0.9rem; }
+    .main { flex: 1; padding: 20px; max-width: 1600px; margin: 0 auto; width: 100%; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #333; }
+    .tab { padding: 8px 16px; background: none; border: none; border-bottom: 2px solid transparent; color: #888; cursor: pointer; font-size: 0.9rem; transition: color 0.15s; margin-bottom: -1px; }
+    .tab.active { color: #fff; border-bottom-color: #4a9eff; }
+    .tab:hover:not(.active) { color: #ccc; }
+
+    /* ── Projects screen ── */
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .project-card { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+    .project-card:hover { border-color: #555; transform: translateY(-1px); }
+    .project-card-logo { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #111; }
+    .project-card-logo-placeholder { width: 100%; aspect-ratio: 16/9; background: #111; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #333; }
+    .project-card-body { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .project-card-title { display: flex; align-items: center; gap: 6px; }
+    .project-card-title h2 { font-size: 1rem; font-weight: 600; color: #fff; }
+    .rename-btn { background: none; border: none; color: #555; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; line-height: 1; transition: color 0.15s; flex-shrink: 0; border-radius: 3px; }
+    .rename-btn:hover { color: #4a9eff; background: #222; }
+    .project-card .meta { font-size: 0.78rem; color: #666; display: flex; gap: 10px; }
+    .project-card .meta span { color: #888; }
+    .project-card .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .remove-link { background: none; border: none; color: #555; font-size: 0.75rem; cursor: pointer; padding: 0; }
+    .remove-link:hover { color: #f88; }
+    .rename-input { background: #111; border: 1px solid #4a9eff; border-radius: 4px; color: #fff; font-size: 1rem; font-weight: 600; padding: 2px 6px; width: 100%; outline: none; }
+    .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s; }
+    .btn-primary { background: #4a9eff; color: #fff; }
+    .btn-primary:hover { background: #3a8eef; }
+    .btn-primary:disabled { background: #2a5a99; opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary { background: #2a2a2a; color: #ccc; }
+    .btn-secondary:hover { background: #333; }
+    .btn-danger { background: #3a1010; color: #f88; }
+    .btn-danger:hover { background: #4a1818; }
+    .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+    .register-card { background: #1a1a1a; border: 1px solid #444; border-radius: 10px; padding: 20px; }
+    .register-card h3 { font-size: 0.95rem; font-weight: 600; color: #ccc; margin-bottom: 14px; }
+    .form-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 200px; }
+    .form-group label { font-size: 0.8rem; color: #888; }
+    .form-group input, .form-group textarea, .form-group select { background: #111; border: 1px solid #444; border-radius: 6px; color: #e0e0e0; padding: 8px 10px; font-size: 0.85rem; font-family: inherit; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #4a9eff; }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .error-msg { color: #f88; font-size: 0.82rem; margin-top: 6px; }
+    .success-msg { color: #6f6; font-size: 0.82rem; margin-top: 6px; }
+    .empty-state { color: #555; text-align: center; padding: 40px; font-size: 0.9rem; }
+
+    /* ── Stats bar ── */
+    .stats-bar { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 16px; }
+    .stat .label { font-size: 0.72rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat .value { font-size: 1.2rem; font-weight: 600; color: #fff; }
+
+    /* ── Filters ── */
+    .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .filter-bar input[type="text"] { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; padding: 7px 12px; font-size: 0.85rem; flex: 1; min-width: 200px; }
+    .filter-bar input[type="text"]:focus { outline: none; border-color: #4a9eff; }
+    .filter-bar select { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; padding: 7px 10px; font-size: 0.85rem; }
+
+    /* ── Clip grid ── */
+    .clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .clip-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
+    .clip-card:hover { border-color: #444; }
+    .clip-thumb { width: 100%; display: block; background: #111; }
+    .clip-thumb-placeholder { width: 100%; aspect-ratio: 9/16; background: #111; display: flex; align-items: center; justify-content: center; color: #333; font-size: 0.75rem; }
+    .clip-info { padding: 10px; }
+    .clip-title { font-size: 0.82rem; font-weight: 500; color: #ccc; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .clip-source { font-size: 0.72rem; color: #666; margin-bottom: 5px; }
+    .clip-source .source-file { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #888; }
+    .clip-source .timecode { display: block; color: #4a9eff; font-family: monospace; font-size: 0.7rem; }
+    .clip-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; }
+    .tag-shot { background: #1a2a4a; color: #7ab; }
+    .tag-tech { background: #1a3a1a; color: #7b7; }
+    .tag-equip { background: #2a1a3a; color: #a7b; }
+    .tag-score { background: #2a2a1a; color: #bb7; }
+    .tag-custom { background: #2a2a2a; color: #999; }
+
+    /* ── Edit modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #1a1a1a; border: 1px solid #444; border-radius: 12px; padding: 24px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+    .modal h2 { font-size: 1rem; font-weight: 600; margin-bottom: 18px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+    .modal-thumb { width: 100%; border-radius: 6px; margin-bottom: 16px; }
+
+    /* ── Score badge ── */
+    .score-excellent { color: #6f6; }
+    .score-good { color: #af6; }
+    .score-marginal { color: #fa6; }
+    .score-notbroll { color: #f66; }
+
+    /* ── Import tab ── */
+    .video-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .video-row { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .video-row .vname { flex: 1; font-size: 0.85rem; color: #ccc; }
+    .video-row .vmeta { font-size: 0.75rem; color: #555; white-space: nowrap; }
+    .video-row .vstatus { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; }
+    .vstatus-indexed { background: #1a3a1a; color: #6b6; }
+    .vstatus-new { background: #2a2a1a; color: #996; }
+    .log-box { background: #0a0a0a; border: 1px solid #333; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.75rem; color: #8a8; max-height: 280px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin-top: 12px; }
+
+    /* ── Taxonomy editor ── */
+    .taxonomy-section { margin-bottom: 24px; }
+    .taxonomy-section h3 { font-size: 0.85rem; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .tags-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #111; border: 1px solid #444; border-radius: 6px; min-height: 44px; align-items: center; }
+    .tags-input-wrap input { background: none; border: none; color: #e0e0e0; font-size: 0.85rem; outline: none; flex: 1; min-width: 120px; }
+    .tag-removable { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; cursor: default; }
+    .tag-removable button { background: none; border: none; color: inherit; cursor: pointer; opacity: 0.6; padding: 0; line-height: 1; font-size: 0.9em; }
+    .tag-removable button:hover { opacity: 1; }
+    .score-slider-row { display: flex; align-items: center; gap: 12px; }
+    .score-slider-row input[type=range] { flex: 1; accent-color: #4a9eff; }
+    .score-slider-row .score-val { font-size: 0.85rem; font-weight: 600; color: #4a9eff; min-width: 36px; }
+
+    /* ── Misc ── */
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #333; border-top-color: #4a9eff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .divider { border: none; border-top: 1px solid #222; margin: 20px 0; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── Router ──────────────────────────────────────────────────────────────────
+
+function useRoute() {
+  const [hash, setHash] = useState(window.location.hash || '#/');
+  useEffect(() => {
+    const on = () => setHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', on);
+    return () => window.removeEventListener('hashchange', on);
+  }, []);
+  const match = hash.match(/^#\/projects\/([^/]+)/);
+  return match ? { screen: 'project', slug: match[1] } : { screen: 'projects', slug: null };
+}
+
+function navigate(hash) {
+  window.location.hash = hash;
+}
+
+// ─── API helpers ─────────────────────────────────────────────────────────────
+
+const api = {
+  // Projects
+  fetchProjects: () => fetch('/api/projects').then(r => r.json()),
+  registerProject: (folderPath, name, logoUrl) => fetch('/api/projects', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folderPath, name, logoUrl }),
+  }).then(r => r.json()),
+  renameProject: (slug, name) => fetch(`/api/projects/${slug}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  }).then(r => r.json()),
+  unregisterProject: (slug) => fetch(`/api/projects/${slug}`, { method: 'DELETE' }).then(r => r.json()),
+
+  // Per-project
+  fetchIndex: (slug) => fetch(`/api/projects/${slug}/index`).then(r => r.json()),
+  fetchTaxonomy: (slug) => fetch(`/api/projects/${slug}/taxonomy`).then(r => r.json()),
+  putTaxonomy: (slug, taxonomy) => fetch(`/api/projects/${slug}/taxonomy`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(taxonomy),
+  }).then(r => r.json()),
+  patchClip: (slug, id, updates) => fetch(`/api/projects/${slug}/clips/${id}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  }).then(r => r.json()),
+  deleteClip: (slug, id) => fetch(`/api/projects/${slug}/clips/${id}`, { method: 'DELETE' }).then(r => r.json()),
+  fetchVideos: (slug) => fetch(`/api/projects/${slug}/videos`).then(r => r.json()),
+  startAnalysis: (slug, filename) => fetch(`/api/projects/${slug}/analyze`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filename ? { filename } : {}),
+  }).then(r => r.json()),
+  fetchAnalysisStatus: (slug) => fetch(`/api/projects/${slug}/analyze/status`).then(r => r.json()),
+  revealInFinder: (slug, filePath) => fetch(`/api/projects/${slug}/reveal`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filePath }),
+  }).then(r => r.json()),
+};
+
+// ─── Tag component ────────────────────────────────────────────────────────────
+
+function Tag({ text, type }) {
+  const cls = {
+    shot: 'tag-shot', tech: 'tag-tech', equip: 'tag-equip', score: 'tag-score',
+  }[type] || 'tag-custom';
+  return <span className={`tag ${cls}`}>{text}</span>;
+}
+
+// ─── TagsField (editable tags input) ─────────────────────────────────────────
+
+function TagsField({ values, onChange, placeholder, colorClass }) {
+  const [input, setInput] = useState('');
+  const inputRef = useRef();
+
+  function add(val) {
+    const v = val.trim().toLowerCase().replace(/\s+/g, '-');
+    if (v && !values.includes(v)) onChange([...values, v]);
+    setInput('');
+  }
+
+  function remove(v) {
+    onChange(values.filter(x => x !== v));
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(input); }
+    else if (e.key === 'Backspace' && !input && values.length) remove(values[values.length - 1]);
+  }
+
+  return (
+    <div className="tags-input-wrap" onClick={() => inputRef.current?.focus()}>
+      {values.map(v => (
+        <span key={v} className={`tag-removable ${colorClass || 'tag-custom'}`}>
+          {v}
+          <button onClick={(e) => { e.stopPropagation(); remove(v); }}>×</button>
+        </span>
+      ))}
+      <input
+        ref={inputRef}
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={onKey}
+        onBlur={() => { if (input) add(input); }}
+        placeholder={values.length ? '' : (placeholder || 'Type and press Enter…')}
+      />
+    </div>
+  );
+}
+
+// ─── ProductsField (preserves original casing) ────────────────────────────────
+
+function ProductsField({ values, onChange }) {
+  const [input, setInput] = useState('');
+  const inputRef = useRef();
+
+  function add(val) {
+    const v = val.trim();
+    if (v && !values.includes(v)) onChange([...values, v]);
+    setInput('');
+  }
+
+  function remove(v) {
+    onChange(values.filter(x => x !== v));
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter') { e.preventDefault(); add(input); }
+    else if (e.key === 'Backspace' && !input && values.length) remove(values[values.length - 1]);
+  }
+
+  return (
+    <div className="tags-input-wrap" onClick={() => inputRef.current?.focus()}>
+      {values.map(v => (
+        <span key={v} className="tag-removable tag-equip">
+          {v}
+          <button onClick={(e) => { e.stopPropagation(); remove(v); }}>×</button>
+        </span>
+      ))}
+      <input
+        ref={inputRef}
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={onKey}
+        onBlur={() => { if (input) add(input); }}
+        placeholder={values.length ? '' : 'Type product name, press Enter…'}
+      />
+    </div>
+  );
+}
+
+// ─── ClipCard ─────────────────────────────────────────────────────────────────
+
+function scoreClass(s) {
+  if (s >= 0.8) return 'score-excellent';
+  if (s >= 0.5) return 'score-good';
+  if (s >= 0.3) return 'score-marginal';
+  return 'score-notbroll';
+}
+
+// Blank 1×1 GIF — used to pause animated GIFs when off-screen
+const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+function ClipCard({ clip, onEdit }) {
+  const imgRef = useRef();
+  const srcRef = useRef(clip.thumbnail);
+
+  useEffect(() => {
+    if (!clip.thumbnail || !imgRef.current) return;
+    const el = imgRef.current;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.src = srcRef.current;
+        } else {
+          el.src = BLANK_GIF;
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [clip.thumbnail]);
+
+  return (
+    <div className="clip-card" onClick={() => onEdit(clip)}>
+      {clip.thumbnail
+        ? <img ref={imgRef} className="clip-thumb" src={BLANK_GIF} alt="" />
+        : <div className="clip-thumb-placeholder">no preview</div>
+      }
+      <div className="clip-info">
+        <div className="clip-title" title={clip.description}>{clip.description || clip.id}</div>
+        {(clip.sourceFilename || clip.startTime) && (
+          <div className="clip-source">
+            {clip.sourceFilename && (
+              <span className="source-file" title={clip.sourceFilename}>
+                {clip.sourceFilename.replace(/\.[^.]+$/, '')}
+              </span>
+            )}
+            {clip.startTime && clip.endTime && (
+              <span className="timecode">{clip.startTime} – {clip.endTime}</span>
+            )}
+          </div>
+        )}
+        <div className="clip-tags">
+          {clip.shotType && <Tag text={clip.shotType} type="shot" />}
+          {clip.technique && <Tag text={clip.technique} type="tech" />}
+          {clip.equipment?.slice(0, 2).map(e => <Tag key={e} text={e} type="equip" />)}
+          {clip.brollScore != null && (
+            <span className={`tag tag-score ${scoreClass(clip.brollScore)}`}>
+              {(clip.brollScore * 100).toFixed(0)}%
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── EditModal ────────────────────────────────────────────────────────────────
+
+function EditModal({ clip, slug, taxonomy, onClose, onSave, onDelete }) {
+  const [form, setForm] = useState({
+    description: clip.description || '',
+    shotType: clip.shotType || '',
+    technique: clip.technique || '',
+    equipment: clip.equipment || [],
+    products: clip.products || [],
+    subjectDescriptors: clip.subjectDescriptors || clip.beanDescriptors || [],
+    brollScore: clip.brollScore ?? '',
+    notes: clip.notes || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
+
+  async function save() {
+    setSaving(true);
+    const updated = await api.patchClip(slug, clip.id, {
+      description: form.description,
+      shotType: form.shotType,
+      technique: form.technique,
+      equipment: form.equipment,
+      products: form.products,
+      subjectDescriptors: form.subjectDescriptors,
+      brollScore: form.brollScore === '' ? null : parseFloat(form.brollScore),
+      notes: form.notes,
+    });
+    setSaving(false);
+    onSave(updated);
+  }
+
+  async function del() {
+    if (!confirm('Delete this clip from the index? (Does not delete the video.)')) return;
+    setDeleting(true);
+    await api.deleteClip(slug, clip.id);
+    setDeleting(false);
+    onDelete(clip.id);
+  }
+
+  const shotTypes = taxonomy?.shotTypes || [];
+  const techniques = taxonomy?.techniques || [];
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <h2>Edit Clip</h2>
+
+        {clip.thumbnail && <img className="modal-thumb" src={clip.thumbnail} alt="" />}
+
+        {(clip.sourceFilename || clip.startTime) && (
+          <div className="modal-field">
+            <label>Source file &amp; timecode</label>
+            <div style={{ background: '#111', border: '1px solid #333', borderRadius: '6px', padding: '8px 10px', lineHeight: '1.6' }}>
+              {clip.sourceFilename && (
+                <div style={{ fontSize: '0.85rem', color: '#ccc', fontFamily: 'monospace', wordBreak: 'break-all' }}>{clip.sourceFilename}</div>
+              )}
+              {clip.startTime && clip.endTime && (
+                <div style={{ fontSize: '0.9rem', color: '#4a9eff', fontFamily: 'monospace', fontWeight: 600 }}>{clip.startTime} – {clip.endTime}</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="modal-field">
+          <label>Description</label>
+          <div className="form-group">
+            <textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} />
+          </div>
+        </div>
+
+        <div className="modal-field">
+          <label>Shot Type</label>
+          <div className="form-group">
+            <select value={form.shotType} onChange={e => set('shotType', e.target.value)}>
+              <option value="">— none —</option>
+              {shotTypes.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="modal-field">
+          <label>Technique</label>
+          <div className="form-group">
+            <select value={form.technique} onChange={e => set('technique', e.target.value)}>
+              <option value="">— none —</option>
+              {techniques.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="modal-field">
+          <label>Equipment / Props</label>
+          <TagsField values={form.equipment} onChange={v => set('equipment', v)} colorClass="tag-equip" />
+        </div>
+
+        <div className="modal-field">
+          <label>Products / Brands</label>
+          <ProductsField values={form.products} onChange={v => set('products', v)} />
+        </div>
+
+        <div className="modal-field">
+          <label>Subject Descriptors</label>
+          <TagsField values={form.subjectDescriptors} onChange={v => set('subjectDescriptors', v)} colorClass="tag-custom" />
+        </div>
+
+        <div className="modal-field">
+          <label>B-Roll Score (0–1)</label>
+          <div className="form-group">
+            <input type="number" min="0" max="1" step="0.01" value={form.brollScore}
+              onChange={e => set('brollScore', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="modal-field">
+          <label>Notes</label>
+          <div className="form-group">
+            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn btn-danger btn-sm" onClick={del} disabled={deleting}>
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
+          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={save} disabled={saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ClipsTab ─────────────────────────────────────────────────────────────────
+
+function ClipsTab({ slug, index, taxonomy, onIndexChange }) {
+  const [search, setSearch] = useState('');
+  const [filterShot, setFilterShot] = useState('');
+  const [filterTech, setFilterTech] = useState('');
+  const [filterScore, setFilterScore] = useState('all');
+  const [editClip, setEditClip] = useState(null);
+
+  const clips = index?.clips || [];
+
+  const filtered = clips.filter(c => {
+    if (filterShot && c.shotType !== filterShot) return false;
+    if (filterTech && c.technique !== filterTech) return false;
+    if (filterScore === 'excellent' && c.brollScore < 0.8) return false;
+    if (filterScore === 'good' && (c.brollScore < 0.5 || c.brollScore >= 0.8)) return false;
+    if (filterScore === 'marginal' && (c.brollScore < 0.3 || c.brollScore >= 0.5)) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const haystack = [c.description, c.shotType, c.technique, c.sourceFilename, ...(c.equipment || []), ...(c.products || []), ...(c.subjectDescriptors || [])].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const shotTypes = [...new Set(clips.map(c => c.shotType).filter(Boolean))].sort();
+  const techniques = [...new Set(clips.map(c => c.technique).filter(Boolean))].sort();
+
+  function handleSave(updated) {
+    const newClips = (index.clips || []).map(c => c.id === updated.id ? { ...c, ...updated } : c);
+    onIndexChange({ ...index, clips: newClips });
+    setEditClip(null);
+  }
+
+  function handleDelete(id) {
+    const newClips = (index.clips || []).filter(c => c.id !== id);
+    onIndexChange({ ...index, clips: newClips });
+    setEditClip(null);
+  }
+
+  return (
+    <div>
+      <div className="filter-bar">
+        <input type="text" placeholder="Search clips…" value={search} onChange={e => setSearch(e.target.value)} />
+        <select value={filterShot} onChange={e => setFilterShot(e.target.value)}>
+          <option value="">All shot types</option>
+          {shotTypes.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filterTech} onChange={e => setFilterTech(e.target.value)}>
+          <option value="">All techniques</option>
+          {techniques.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select value={filterScore} onChange={e => setFilterScore(e.target.value)}>
+          <option value="all">All scores</option>
+          <option value="excellent">Excellent (≥80%)</option>
+          <option value="good">Good (50–80%)</option>
+          <option value="marginal">Marginal (30–50%)</option>
+        </select>
+      </div>
+
+      <div style={{ color: '#555', fontSize: '0.8rem', marginBottom: '12px' }}>
+        {filtered.length} of {clips.length} clips
+      </div>
+
+      {filtered.length === 0
+        ? <div className="empty-state">No clips match your filters.</div>
+        : (
+          <div className="clip-grid">
+            {filtered.map(clip => (
+              <ClipCard key={clip.id} clip={clip} slug={slug} onEdit={setEditClip} />
+            ))}
+          </div>
+        )
+      }
+
+      {editClip && (
+        <EditModal
+          clip={editClip}
+          slug={slug}
+          taxonomy={taxonomy}
+          onClose={() => setEditClip(null)}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── ImportTab ────────────────────────────────────────────────────────────────
+
+function ImportTab({ slug }) {
+  const [videos, setVideos] = useState([]);
+  const [sourceDir, setSourceDir] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState(null);
+  const logRef = useRef();
+
+  async function loadVideos() {
+    setLoading(true);
+    const data = await api.fetchVideos(slug);
+    setVideos(data.videos || []);
+    setSourceDir(data.sourceDir);
+    setLoading(false);
+  }
+
+  useEffect(() => { loadVideos(); }, [slug]);
+
+  // Poll for job status
+  useEffect(() => {
+    if (!job || job.status !== 'running') return;
+    const interval = setInterval(async () => {
+      const status = await api.fetchAnalysisStatus(slug);
+      setJob(status);
+      if (status.status !== 'running') {
+        clearInterval(interval);
+        loadVideos();
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [job?.status, slug]);
+
+  // Auto-scroll log
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [job?.log]);
+
+  async function analyze(filename) {
+    const result = await api.startAnalysis(slug, filename);
+    if (result.error) { alert(result.error); return; }
+    setJob(result.job || { status: 'running', log: [] });
+  }
+
+  async function analyzeAll() {
+    const result = await api.startAnalysis(slug, null);
+    if (result.error) { alert(result.error); return; }
+    setJob(result.job || { status: 'running', log: [] });
+  }
+
+  const newVideos = videos.filter(v => !v.indexed);
+
+  return (
+    <div>
+      {sourceDir && (
+        <div style={{ fontSize: '0.78rem', color: '#555', marginBottom: '12px', fontFamily: 'monospace' }}>
+          {sourceDir}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', alignItems: 'center' }}>
+        <button
+          className="btn btn-primary"
+          disabled={newVideos.length === 0 || job?.status === 'running'}
+          onClick={analyzeAll}
+        >
+          {job?.status === 'running' ? <><span className="spinner" /> Analyzing…</> : `Analyze ${newVideos.length} new video${newVideos.length !== 1 ? 's' : ''}`}
+        </button>
+        <button className="btn btn-secondary btn-sm" onClick={loadVideos} disabled={loading}>
+          Refresh
+        </button>
+      </div>
+
+      {job && (
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '0.82rem', color: job.status === 'completed' ? '#6f6' : job.status === 'failed' ? '#f66' : '#4a9eff', marginBottom: '6px' }}>
+            {job.status === 'running' ? `Analyzing: ${job.filename}` : `Analysis ${job.status}`}
+          </div>
+          <div className="log-box" ref={logRef}>
+            {(job.log || []).join('\n') || '(waiting for output…)'}
+          </div>
+        </div>
+      )}
+
+      {loading ? <div className="empty-state"><span className="spinner" /></div> : (
+        <div className="video-list">
+          {videos.map(v => (
+            <div className="video-row" key={v.filename}>
+              <div className="vname">{v.filename}</div>
+              <div className="vmeta">{v.sizeMB} MB{v.clipCount ? ` · ${v.clipCount} clips` : ''}</div>
+              <span className={`vstatus ${v.indexed ? 'vstatus-indexed' : 'vstatus-new'}`}>
+                {v.indexed ? 'indexed' : 'new'}
+              </span>
+              <button
+                className="btn btn-secondary btn-sm"
+                disabled={job?.status === 'running'}
+                onClick={() => analyze(v.filename)}
+              >
+                {v.indexed ? 'Re-analyze' : 'Analyze'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TaxonomyEditor ───────────────────────────────────────────────────────────
+
+function TaxonomyEditor({ slug }) {
+  const [tax, setTax] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    api.fetchTaxonomy(slug).then(t => { setTax(t); setLoading(false); });
+  }, [slug]);
+
+  function set(k, v) { setTax(t => ({ ...t, [k]: v })); }
+  function setScore(k, v) {
+    setTax(t => ({ ...t, brollScoreGuide: { ...t.brollScoreGuide, [k]: { ...t.brollScoreGuide[k], ...v } } }));
+  }
+
+  async function save() {
+    setSaving(true);
+    setSaveMsg('');
+    await api.putTaxonomy(slug, tax);
+    setSaving(false);
+    setSaveMsg('Saved!');
+    setTimeout(() => setSaveMsg(''), 2000);
+  }
+
+  if (loading) return <div className="empty-state"><span className="spinner" /></div>;
+  if (!tax) return <div className="empty-state">No taxonomy found.</div>;
+
+  return (
+    <div style={{ maxWidth: '700px' }}>
+
+      <div className="taxonomy-section">
+        <h3>Content Context</h3>
+        <div className="form-group">
+          <label style={{ fontSize: '0.78rem', color: '#666', marginBottom: '5px', display: 'block' }}>
+            Describe your content to help the AI classifier. E.g. "This is a specialty coffee YouTube channel."
+          </label>
+          <textarea
+            value={tax.promptContext || ''}
+            onChange={e => set('promptContext', e.target.value)}
+            rows={3}
+            placeholder="Leave blank for generic classification…"
+          />
+        </div>
+      </div>
+
+      <div className="taxonomy-section">
+        <h3>Shot Types</h3>
+        <TagsField values={tax.shotTypes || []} onChange={v => set('shotTypes', v)} colorClass="tag-shot" />
+      </div>
+
+      <div className="taxonomy-section">
+        <h3>Techniques</h3>
+        <TagsField values={tax.techniques || []} onChange={v => set('techniques', v)} colorClass="tag-tech" />
+      </div>
+
+      <div className="taxonomy-section">
+        <h3>Equipment / Props</h3>
+        <TagsField values={tax.equipment || []} onChange={v => set('equipment', v)} colorClass="tag-equip" />
+      </div>
+
+      <div className="taxonomy-section">
+        <h3>Products / Brands</h3>
+        <ProductsField values={tax.products || []} onChange={v => set('products', v)} />
+      </div>
+
+      <div className="taxonomy-section">
+        <h3>Subject Descriptors</h3>
+        <TagsField values={tax.subjectDescriptors || []} onChange={v => set('subjectDescriptors', v)} colorClass="tag-custom" />
+        <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '6px' }}>
+          Domain-specific descriptors passed to the classifier. E.g. "light-roast", "ipa", "vegan".
+        </div>
+      </div>
+
+      <div className="taxonomy-section">
+        <h3>Minimum B-Roll Score Threshold</h3>
+        <div className="score-slider-row">
+          <input type="range" min="0" max="1" step="0.05"
+            value={tax.minimumBrollScore ?? 0.5}
+            onChange={e => set('minimumBrollScore', parseFloat(e.target.value))}
+          />
+          <span className="score-val">{((tax.minimumBrollScore ?? 0.5) * 100).toFixed(0)}%</span>
+        </div>
+        <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '4px' }}>
+          Clips below this score are excluded from exports and bulk operations.
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button className="btn btn-primary" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save Taxonomy'}
+        </button>
+        {saveMsg && <span className="success-msg">{saveMsg}</span>}
+      </div>
+    </div>
+  );
+}
+
+// ─── ProjectScreen ────────────────────────────────────────────────────────────
+
+function ProjectScreen({ slug }) {
+  const [project, setProject] = useState(null);
+  const [index, setIndex] = useState(null);
+  const [taxonomy, setTaxonomy] = useState(null);
+  const [tab, setTab] = useState('clips');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      api.fetchProjects(),
+      api.fetchIndex(slug),
+      api.fetchTaxonomy(slug),
+    ]).then(([registry, idx, tax]) => {
+      setProject((registry.projects || []).find(p => p.slug === slug) || null);
+      setIndex(idx);
+      setTaxonomy(tax);
+      setLoading(false);
+    });
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="header">
+          <a className="back-link" href="#/" onClick={e => { e.preventDefault(); navigate('#/'); }}>← All Projects</a>
+        </div>
+        <div className="main"><div className="empty-state"><span className="spinner" /></div></div>
+      </div>
+    );
+  }
+
+  const clips = index?.clips || [];
+  const videoCount = Object.keys(index?.videos || {}).length;
+
+  return (
+    <div className="app">
+      <div className="header">
+        <a className="back-link" href="#/" onClick={e => { e.preventDefault(); navigate('#/'); }}>← All Projects</a>
+        <h1>{project?.name || slug}</h1>
+      </div>
+      <div className="main">
+
+        <div className="stats-bar">
+          <div className="stat"><div className="label">Clips</div><div className="value">{clips.length}</div></div>
+          <div className="stat"><div className="label">Videos</div><div className="value">{videoCount}</div></div>
+          <div className="stat">
+            <div className="label">Excellent</div>
+            <div className="value score-excellent">{clips.filter(c => c.brollScore >= 0.8).length}</div>
+          </div>
+          <div className="stat">
+            <div className="label">Good</div>
+            <div className="value score-good">{clips.filter(c => c.brollScore >= 0.5 && c.brollScore < 0.8).length}</div>
+          </div>
+        </div>
+
+        <div className="tabs">
+          <button className={`tab ${tab === 'clips' ? 'active' : ''}`} onClick={() => setTab('clips')}>
+            Clips ({clips.length})
+          </button>
+          <button className={`tab ${tab === 'import' ? 'active' : ''}`} onClick={() => setTab('import')}>
+            Import
+          </button>
+          <button className={`tab ${tab === 'taxonomy' ? 'active' : ''}`} onClick={() => setTab('taxonomy')}>
+            Taxonomy
+          </button>
+        </div>
+
+        {tab === 'clips' && (
+          <ClipsTab slug={slug} index={index} taxonomy={taxonomy} onIndexChange={setIndex} />
+        )}
+        {tab === 'import' && <ImportTab slug={slug} />}
+        {tab === 'taxonomy' && <TaxonomyEditor slug={slug} />}
+      </div>
+    </div>
+  );
+}
+
+// ─── ProjectsScreen ───────────────────────────────────────────────────────────
+
+function ProjectsScreen() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [folderPath, setFolderPath] = useState('');
+  const [projName, setProjName] = useState('');
+  const [logoPath, setLogoPath] = useState('');
+  const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState('');
+
+  async function loadProjects() {
+    setLoading(true);
+    const data = await api.fetchProjects();
+    setProjects(data.projects || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { loadProjects(); }, []);
+
+  async function register() {
+    if (!folderPath.trim()) { setRegisterError('Folder path is required.'); return; }
+    setRegistering(true);
+    setRegisterError('');
+    const result = await api.registerProject(folderPath.trim(), projName.trim() || undefined, logoPath.trim() || undefined);
+    if (result.error) {
+      setRegisterError(result.error);
+      setRegistering(false);
+      return;
+    }
+    setFolderPath('');
+    setProjName('');
+    setLogoPath('');
+    setRegistering(false);
+    navigate(`#/projects/${result.project.slug}`);
+  }
+
+  const [renamingSlug, setRenamingSlug] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
+  const renameInputRef = useRef();
+
+  async function unregister(slug, name) {
+    if (!confirm(`Remove "${name}" from the project list?\n\nThis does NOT delete any files.`)) return;
+    await api.unregisterProject(slug);
+    loadProjects();
+  }
+
+  function startRename(e, p) {
+    e.stopPropagation();
+    setRenamingSlug(p.slug);
+    setRenameValue(p.name);
+    setTimeout(() => renameInputRef.current?.select(), 0);
+  }
+
+  async function commitRename(slug) {
+    const trimmed = renameValue.trim();
+    if (trimmed) await api.renameProject(slug, trimmed);
+    setRenamingSlug(null);
+    loadProjects();
+  }
+
+  return (
+    <div className="app">
+      <div className="header">
+        <h1>B-Roll Index</h1>
+      </div>
+      <div className="main">
+
+        {loading ? (
+          <div className="empty-state"><span className="spinner" /></div>
+        ) : projects.length === 0 ? (
+          <div className="empty-state" style={{ marginBottom: '24px' }}>No projects yet. Register a video folder below.</div>
+        ) : (
+          <div className="projects-grid">
+            {projects.map(p => (
+              <div className="project-card" key={p.slug} onClick={() => renamingSlug !== p.slug && navigate(`#/projects/${p.slug}`)}>
+                {p.logoUrl
+                  ? <img className="project-card-logo" src={p.logoUrl} alt={p.name} />
+                  : <div className="project-card-logo-placeholder">🎬</div>
+                }
+                <div className="project-card-body">
+                  {renamingSlug === p.slug ? (
+                    <input
+                      ref={renameInputRef}
+                      className="rename-input"
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') commitRename(p.slug);
+                        if (e.key === 'Escape') setRenamingSlug(null);
+                      }}
+                      onBlur={() => commitRename(p.slug)}
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="project-card-title">
+                      <h2>{p.name}</h2>
+                      <button className="rename-btn" title="Rename" onClick={e => startRename(e, p)}>✎</button>
+                    </div>
+                  )}
+                  <div className="meta">
+                    <span>{p.clipCount} clips</span>
+                    <span>{p.videoCount} videos</span>
+                    {p.lastUpdated && <span>{new Date(p.lastUpdated).toLocaleDateString()}</span>}
+                  </div>
+                  <div className="card-footer">
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {p.folderPath.split('/').pop()}
+                    </div>
+                    <button className="remove-link" onClick={e => { e.stopPropagation(); unregister(p.slug, p.name); }}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="register-card">
+          <h3>Register a Project</h3>
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 2 }}>
+              <label>Video folder path</label>
+              <input
+                type="text"
+                value={folderPath}
+                onChange={e => setFolderPath(e.target.value)}
+                placeholder="/path/to/your/videos"
+                onKeyDown={e => e.key === 'Enter' && register()}
+              />
+            </div>
+            <div className="form-group">
+              <label>Project name (optional)</label>
+              <input
+                type="text"
+                value={projName}
+                onChange={e => setProjName(e.target.value)}
+                placeholder="Auto-derived from folder name"
+                onKeyDown={e => e.key === 'Enter' && register()}
+              />
+            </div>
+            <div className="form-group">
+              <label>Logo URL or /assets/… path (optional)</label>
+              <input
+                type="text"
+                value={logoPath}
+                onChange={e => setLogoPath(e.target.value)}
+                placeholder="/assets/banner.jpeg"
+                onKeyDown={e => e.key === 'Enter' && register()}
+              />
+            </div>
+            <div className="form-group" style={{ flex: 0, justifyContent: 'flex-end' }}>
+              <label>&nbsp;</label>
+              <button className="btn btn-primary" onClick={register} disabled={registering}>
+                {registering ? 'Registering…' : 'Register'}
+              </button>
+            </div>
+          </div>
+          {registerError && <div className="error-msg">{registerError}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── App (router) ─────────────────────────────────────────────────────────────
+
+function App() {
+  const route = useRoute();
+  if (route.screen === 'project') return <ProjectScreen slug={route.slug} />;
+  return <ProjectsScreen />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
