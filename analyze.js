@@ -163,12 +163,29 @@ async function main() {
   for (let v = 0; v < videoFiles.length; v++) {
     const filename = videoFiles[v];
     const videoPath = path.join(resolvedProject, filename);
-    const videoId = generateVideoId(index.videos);
     let uploadedFileName = null;
 
     log(`━━━ [${v + 1}/${videoFiles.length}] ${filename} ━━━`);
 
     try {
+      // If this filename already exists in the index, replace its prior clips on re-analyze.
+      const existingVideoIds = Object.entries(index.videos)
+        .filter(([, meta]) => meta.filename === filename)
+        .map(([id]) => id);
+      if (existingVideoIds.length) {
+        const existingSet = new Set(existingVideoIds);
+        const clipsToRemove = index.clips.filter((c) => existingSet.has(c.videoId));
+        for (const c of clipsToRemove) {
+          if (!c.thumbnail) continue;
+          try { fs.unlinkSync(path.join(THUMBNAILS_DIR, c.thumbnail)); } catch {}
+        }
+        index.clips = index.clips.filter((c) => !existingSet.has(c.videoId));
+        for (const vid of existingVideoIds) delete index.videos[vid];
+        log(`  Re-analyze mode: replaced ${clipsToRemove.length} prior clip(s) for this video`);
+      }
+
+      const videoId = generateVideoId(index.videos);
+
       // Step 1: Get video duration
       const duration = await getVideoDuration(videoPath);
       log(`  Duration: ${formatDuration(duration)}`);
@@ -189,8 +206,8 @@ async function main() {
       const goodSegments = segments.filter((s) => s.brollScore >= minScore);
       log(`  ${goodSegments.length} clips above score threshold (>= ${minScore})`);
 
-      // Step 5: Generate animated GIF previews
-      log("  Generating clip previews...");
+      // Step 5: Generate animated GIF previews (tidy window extraction)
+      log("  Generating clip previews (tidied)...");
       const clips = [];
       for (const seg of goodSegments) {
         const startSec = parseTimestamp(seg.startTime);
